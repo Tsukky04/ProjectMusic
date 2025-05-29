@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Festividades da area 3</title>
+<style>
+  body {
+    font-family: sans-serif;
+    background: #fcfcfc;
+    color: #da04e9;
+    padding: 20px;
+    margin: 0;
+    text-align: left;
+    overflow-x: hidden;
+  }
+
+  .container {
+    max-width: 900px;
+  }
+
+  h1, h2 {
+    color: #da04e9;
+  }
+
+  #toggleListBtn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #da04e9;
+    color: #ffffff;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    z-index: 1001;
+    border-radius: 5px;
+  }
+
+  #musicSidebar {
+    position: fixed;
+    top: 0;
+    right: -320px;
+    width: 300px;
+    height: 100vh;
+    background: #1e1e1e;
+    box-shadow: -2px 0 8px rgba(0,0,0,0.7);
+    padding: 20px;
+    overflow-y: auto;
+    transition: right 0.3s ease;
+    z-index: 1000;
+  }
+
+  #musicSidebar.active {
+    right: 0;
+  }
+
+  #allMusicList {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  #allMusicList li {
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #ffffff;
+  }
+
+  #allMusicList li button {
+    background: none;
+    border: none;
+    color: #8ab4f8;
+    cursor: pointer;
+    font-size: 1em;
+  }
+
+  .container.withSidebar {
+    margin-right: 320px;
+  }
+
+  input, select, button {
+    background: #1e1e1e;
+    color: #ffffff;
+    border: 1px solid #333;
+    padding: 6px 12px;
+    margin: 5px 0;
+    font-size: 1em;
+    text-align: left;
+  }
+
+  input[type="file"] {
+    padding: 4px;
+  }
+
+  .controls button {
+    background: none;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    margin-left: 5px;
+    font-size: 1em;
+  }
+
+  .controls button:hover {
+    color: #ffffff;
+  }
+
+  .controls .removeBtn {
+    color: #ff5c5c;
+    margin-left: 10px;
+  }
+
+  .controls .removeBtn:hover {
+    color: #ff0000;
+    font-weight: bold;
+  }
+
+  .playlist {
+    margin-bottom: 20px;
+    text-align: left;
+  }
+
+  audio {
+    margin-top: 20px;
+    width: 100%;
+    background-color: #1e1e1e;
+    display: block;
+  }
+
+  ul {
+    list-style-type: none;
+    padding: 0;
+    text-align: left;
+  }
+
+  li {
+    margin: 6px 0;
+    text-align: left;
+  }
+
+  .player-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .volume-control {
+    margin-top: 20px;
+    max-width: 300px;
+    text-align: left;
+    color: #ffffff;
+    font-weight: bold;
+  }
+
+  button#prevBtn,
+  button#playPauseBtn,
+  button#nextBtn {
+    font-size: 1.2em;
+    background: none;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+  }
+
+  button#prevBtn:hover,
+  button#playPauseBtn:hover,
+  button#nextBtn:hover {
+    color: #bd07ea;
+  }
+
+  /* --- BARRAS DE REPRODUÇÃO E VOLUME COM ESTILO --- */
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(to right, #da04e9, #8a2be2);
+    border-radius: 5px;
+    outline: none;
+    margin-top: 10px;
+    transition: background 0.3s ease;
+    box-shadow: 0 0 5px rgba(218, 4, 233, 0.5);
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #ffffff;
+    border: 2px solid #da04e9;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover {
+    background: #da04e9;
+    transform: scale(1.2);
+    box-shadow: 0 0 10px #da04e9;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: #ffffff;
+    border: 2px solid #da04e9;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  input[type="range"]::-moz-range-thumb:hover {
+    background: #da04e9;
+    transform: scale(1.2);
+    box-shadow: 0 0 10px #da04e9;
+  }
+</style>
+
+</head>
+<body>
+
+<input type="text" id="searchMusic" placeholder="Buscar música..." style="margin-right:10px; padding:6px; font-size:1em;" />
+
+<button id="toggleListBtn">Mostrar Músicas</button>
+
+<div id="musicSidebar">
+  <h2>Todas as Músicas</h2>
+  <ul id="allMusicList"></ul>
+</div>
+
+<div class="container" id="mainContainer">
+  <h1>Music Playlist</h1>
+
+  <input type="text" id="newPlaylistName" placeholder="Nova Playlist" />
+  <button onclick="createPlaylist()">Criar Playlist</button>
+
+  <br /><br />
+
+  <input type="file" id="fileInput" multiple />
+  <select id="playlistSelector"></select>
+  <button onclick="addToPlaylist()">Adicionar à Playlist</button>
+
+  <div id="playlistsContainer"></div>
+
+  <div style="margin-top: 40px;">
+    <h2 id="trackName">Nenhuma música tocando</h2>
+
+    <audio id="audioPlayer" controls></audio>
+
+    <div class="player-controls">
+      <button id="prevBtn">⏮</button>
+      <button id="playPauseBtn">▶</button>
+      <button id="nextBtn">⏭</button>
+    </div>
+
+    <input type="range" id="seekBar" value="0" />
+    <div class="volume-control">
+      Volume:
+      <input
+        type="range"
+        id="volumeControl"
+        min="0"
+        max="1"
+        step="0.01"
+        value="1"
+      />
+    </div>
+  </div>
+</div>
+
+<script>
+  const toggleListBtn = document.getElementById('toggleListBtn');
+  const musicSidebar = document.getElementById('musicSidebar');
+  const mainContainer = document.getElementById('mainContainer');
+
+  toggleListBtn.addEventListener('click', () => {
+    musicSidebar.classList.toggle('active');
+    if (musicSidebar.classList.contains('active')) {
+      toggleListBtn.textContent = 'Esconder Músicas';
+      mainContainer.classList.add('withSidebar');
+    } else {
+      toggleListBtn.textContent = 'Mostrar Músicas';
+      mainContainer.classList.remove('withSidebar');
+    }
+  });
+
+  const playlists = new Map();
+  const playlistSelector = document.getElementById('playlistSelector');
+  const playlistsContainer = document.getElementById('playlistsContainer');
+  const allMusicList = document.getElementById('allMusicList');
+  const audioPlayer = document.getElementById('audioPlayer');
+
+  const playPauseBtn = document.getElementById('playPauseBtn');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const seekBar = document.getElementById('seekBar');
+  const volumeControl = document.getElementById('volumeControl');
+  const trackName = document.getElementById('trackName');
+
+  let currentIndex = 0;
+  let currentPlaylist = [];
+
+  const DB_NAME = 'musicDB';
+  const DB_VERSION = 1;
+  const STORE_NAME = 'musics';
+
+  let db;
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        db = request.result;
+        resolve();
+      };
+      request.onupgradeneeded = (e) => {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+        }
+      };
+    });
+  }
+
+  function saveMusicFile(name, file) {
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.add({ name, file });
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  function getAllMusicsFromDB() {
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  function deleteMusicFile(id) {
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.delete(id);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  function savePlaylists() {
+    // Armazena playlists no localStorage
+    const serialized = {};
+    for (const [key, musics] of playlists.entries()) {
+      serialized[key] = musics.map((m) => ({
+        id: m.id,
+        name: m.name,
+      }));
+    }
+    localStorage.setItem('playlists', JSON.stringify(serialized));
+  }
+
+  function loadPlaylists() {
+    const serialized = localStorage.getItem('playlists');
+    if (!serialized) return;
+
+    const obj = JSON.parse(serialized);
+    for (const key in obj) {
+      playlists.set(key, obj[key]);
+    }
+  }
+
+  async function renderPlaylists() {
+    playlistsContainer.innerHTML = '';
+    allMusicList.innerHTML = '';
+    playlistSelector.innerHTML = '';
+
+    for (const [name, musics] of playlists.entries()) {
+      // Atualiza a lista lateral (todas as músicas)
+      musics.forEach((music) => {
+        const li = document.createElement('li');
+        li.textContent = `${music.name} (${name})`;
+
+        const playBtn = document.createElement('button');
+        playBtn.textContent = '▶';
+        playBtn.onclick = () => playTrack(music, musics);
+
+        li.appendChild(playBtn);
+        allMusicList.appendChild(li);
+      });
+
+      // Atualiza dropdown de seleção
+      const option = document.createElement('option');
+      option.value = name;
+      option.textContent = name;
+      playlistSelector.appendChild(option);
+
+      // Cria container da playlist
+      const div = document.createElement('div');
+      div.className = 'playlist';
+
+      // Botão toggle para mostrar/esconder músicas
+      const toggleBtn = document.createElement('button');
+      toggleBtn.textContent = 'Mostrar músicas';
+      toggleBtn.style.marginBottom = '10px';
+
+      const ul = document.createElement('ul');
+      ul.style.listStyle = 'none';
+      ul.style.paddingLeft = '0';
+      ul.style.display = 'none'; // inicialmente escondido
+
+      musics.forEach((music, index) => {
+        const li = document.createElement('li');
+        li.textContent = music.name;
+
+        const controls = document.createElement('div');
+        controls.className = 'controls';
+
+        const playBtn = document.createElement('button');
+        playBtn.textContent = '▶';
+        playBtn.onclick = () => playTrack(music, musics);
+
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = '🗑';
+        removeBtn.className = 'removeBtn';
+        removeBtn.onclick = async () => {
+          musics.splice(index, 1);
+          try { await deleteMusicFile(music.id); } catch (err) {}
+          renderPlaylists();
+          savePlaylists();
+        };
+
+        controls.appendChild(playBtn);
+        controls.appendChild(removeBtn);
+        li.appendChild(controls);
+        ul.appendChild(li);
+      });
+
+      toggleBtn.onclick = () => {
+        if (ul.style.display === 'none') {
+          ul.style.display = 'block';
+          toggleBtn.textContent = 'Esconder músicas';
+        } else {
+          ul.style.display = 'none';
+          toggleBtn.textContent = 'Mostrar músicas';
+        }
+      };
+
+      div.appendChild(document.createElement('hr'));
+      const h3 = document.createElement('h3');
+      h3.textContent = name;
+      div.appendChild(h3);
+      div.appendChild(toggleBtn);
+      div.appendChild(ul);
+      playlistsContainer.appendChild(div);
+    }
+  }
+
+  function createPlaylist() {
+    const newPlaylistName = document.getElementById('newPlaylistName').value.trim();
+    if (!newPlaylistName) return alert('Informe o nome da playlist');
+    if (playlists.has(newPlaylistName)) {
+      alert('Playlist já existe!');
+      return;
+    }
+    playlists.set(newPlaylistName, []);
+    document.getElementById('newPlaylistName').value = '';
+    renderPlaylists();
+    savePlaylists();
+  }
+
+  async function addToPlaylist() {
+    const files = document.getElementById('fileInput').files;
+    const selectedPlaylist = playlistSelector.value;
+
+    if (!selectedPlaylist) {
+      alert('Selecione uma playlist');
+      return;
+    }
+    if (files.length === 0) {
+      alert('Selecione arquivos para adicionar');
+      return;
+    }
+
+    for (const file of files) {
+      const id = await saveMusicFile(file.name, file);
+      playlists.get(selectedPlaylist).push({ id, name: file.name });
+    }
+
+    renderPlaylists();
+    savePlaylists();
+    document.getElementById('fileInput').value = '';
+  }
+
+  function playTrack(music, playlist) {
+    currentPlaylist = playlist;
+    currentIndex = playlist.findIndex((m) => m.id === music.id);
+    if (currentIndex === -1) currentIndex = 0;
+
+    getMusicFile(music.id).then((file) => {
+      const url = URL.createObjectURL(file);
+      audioPlayer.src = url;
+      audioPlayer.play();
+      trackName.textContent = music.name;
+      playPauseBtn.textContent = '⏸';
+    });
+  }
+
+  function getMusicFile(id) {
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.get(id);
+      request.onsuccess = () => {
+        if (request.result) {
+          resolve(request.result.file);
+        } else {
+          reject('Arquivo não encontrado');
+        }
+      };
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  playPauseBtn.onclick = () => {
+    if (audioPlayer.paused) {
+      audioPlayer.play();
+      playPauseBtn.textContent = '⏸';
+    } else {
+      audioPlayer.pause();
+      playPauseBtn.textContent = '▶';
+    }
+  };
+
+  prevBtn.onclick = () => {
+    if (!currentPlaylist.length) return;
+    currentIndex = (currentIndex - 1 + currentPlaylist.length) % currentPlaylist.length;
+    playTrack(currentPlaylist[currentIndex], currentPlaylist);
+  };
+
+  nextBtn.onclick = () => {
+    if (!currentPlaylist.length) return;
+    currentIndex = (currentIndex + 1) % currentPlaylist.length;
+    playTrack(currentPlaylist[currentIndex], currentPlaylist);
+  };
+
+  audioPlayer.ontimeupdate = () => {
+    if (audioPlayer.duration) {
+      seekBar.value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+    }
+  };
+
+  seekBar.oninput = () => {
+    if (audioPlayer.duration) {
+      audioPlayer.currentTime = (seekBar.value / 100) * audioPlayer.duration;
+    }
+  };
+
+  volumeControl.oninput = () => {
+    audioPlayer.volume = volumeControl.value;
+  };
+
+  // Busca músicas na lista lateral
+  const searchMusicInput = document.getElementById('searchMusic');
+  searchMusicInput.oninput = () => {
+    const filter = searchMusicInput.value.toLowerCase();
+    allMusicList.querySelectorAll('li').forEach((li) => {
+      const text = li.textContent.toLowerCase();
+      li.style.display = text.includes(filter) ? '' : 'none';
+    });
+  };
+
+  async function loadDBAndPlaylists() {
+    await openDB();
+
+    // Carregar músicas salvas no DB
+    const savedMusics = await getAllMusicsFromDB();
+
+    loadPlaylists();
+
+    // Vincular músicas do DB aos playlists carregados (referência correta)
+    for (const [playlistName, musics] of playlists.entries()) {
+      playlists.set(
+        playlistName,
+        musics.map((m) => {
+          const found = savedMusics.find((sm) => sm.id === m.id);
+          return found || m; // tenta manter a referência do arquivo
+        })
+      );
+    }
+
+    renderPlaylists();
+  }
+
+  loadDBAndPlaylists();
+</script>
+
+</body>
+</html>
